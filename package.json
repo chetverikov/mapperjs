@@ -1,22 +1,42 @@
 {
   "name": "mapper",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "The solution for node.js for migrate data from the old format to the new format data with pre-processing",
-  "keywords": ["data", "mapper", "map", "parser", "object", "keys", "helper", "utility"],
+  "keywords": [
+    "data",
+    "mapper",
+    "map",
+    "parser",
+    "object",
+    "keys",
+    "helper",
+    "utility"
+  ],
   "author": "Maksim Chetverikov <ma.chetverikov@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/visionmedia/commander.js.git"
+    "url": "https://github.com/chetverikov/mapper.git"
   },
   "dependencies": {
     "lodash": ">= 2.4.0",
-    "mpath" : ">= 0.2.0",
-    "cli-colot": "0.x",
+    "mpath": ">= 0.2.0",
+    "cli-color": "0.x",
     "async": "*"
   },
   "main": "index",
   "engines": {
     "node": ">= 0.6.x"
   },
-  "files": ["index.js"]
+  "files": [
+    "index.js"
+  ],
+  "bugs": {
+    "url": "https://github.com/chetverikov/mapper/issues"
+  },
+  "homepage": "https://github.com/chetverikov/mapper",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT"
 }
+
