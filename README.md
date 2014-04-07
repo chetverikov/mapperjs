@@ -3,11 +3,19 @@ mapper
 
 NodeJS Data Mapper for transfer data from old format to new.
 
+# Install
+
+```
+
+ npm install mapperjs;
+
+```
+
 # Usage
 
 ```javascript
 
-var mapper = require('mapper');
+var mapper = require('mapperjs');
 
 mapper = new mapper( map, options );
 mapper.transfer( source, destination, function(err, dst_res_obj){
