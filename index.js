@@ -6,6 +6,7 @@ var _ = require('lodash')
   , reg_part_not_num = /^\d+$/;
 
 // wait https://github.com/aheckmann/mpath/pull/6
+function K ( v ){ return v; };
 mpath.set = function (path, val, o, special, map, _copying) {
   var lookup;
 
