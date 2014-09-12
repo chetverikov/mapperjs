@@ -3,11 +3,11 @@ var _ = require('lodash')
   , color = require('cli-color')
   , async = require('async')
   , reg_dollar_exist = /\$/
-  , reg_part_not_num = /^\d+$/;
+  , isNum = /^\d+$/;
 
 // wait https://github.com/aheckmann/mpath/pull/6
 function K ( v ){ return v; };
-mpath.set = function (path, val, o, special, map, _copying) {
+mpath.set = function (path, val, o, special, map, _copying, workWithArray) {
   var lookup;
 
   if ('function' == typeof special) {
@@ -51,8 +51,11 @@ mpath.set = function (path, val, o, special, map, _copying) {
       }
     }
 
-    if (Array.isArray(obj) && !reg_part_not_num.test(part)) {
+    if (Array.isArray(obj) && !isNum.test(part)) {
       var paths = parts.slice(i);
+
+      workWithArray = true;
+
       if (!copy && Array.isArray(val)) {
         for (var j = 0; j < obj.length && j < val.length; ++j) {
           // assignment of single values of array
@@ -67,8 +70,14 @@ mpath.set = function (path, val, o, special, map, _copying) {
       return;
     }
 
-    if (parts[ i + 1 ] == '$' && !obj[part] && !parts[ i + 2 ]) {
-      obj[part] = [];
+    if (!obj[part]) {
+      if (parts[ i + 1 ] && parts[ i + 1 ] == '$' && !parts[ i + 2 ]){
+        obj[part] = [];
+      }
+
+      if(!workWithArray && parts[ i + 1 ] != '$'){
+        obj[part] = {};
+      }
     }
 
     if (lookup) {
@@ -91,7 +100,7 @@ mpath.set = function (path, val, o, special, map, _copying) {
   }
 
   // set the value on the last branch
-  if (Array.isArray(obj) && !reg_part_not_num.test(part)) {
+  if (Array.isArray(obj) && !isNum.test(part)) {
     if (!copy && Array.isArray(val)) {
       for (var item, j = 0; j < obj.length && j < val.length; ++j) {
         item = obj[j];
