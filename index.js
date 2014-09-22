@@ -182,43 +182,21 @@ mpath.set = function (path, val, o, special, map, _copying, workWithArray) {
  * @constructor
  */
 function Mapper( map, options ){
-  if (!(this instanceof Mapper))
-    return new Mapper(obj, options);
-
   if(!_.isArray(map) || !map.length)
     throw new Error( "Map is not array" );
 
-  this._map = map;
-  this.options = this.defaultOptions({
-    parallel: false,
-    limit: false,
-    debug: false
-  }, options);
-}
-
-/**
- * Returns default options for this schema, merged with `options`.
- *
- * @param {Object} options
- * @return {Object}
- * @api private
- */
-Mapper.prototype.defaultOptions = function(defaults, options){
-  var keys = Object.keys(defaults)
-    , i = keys.length
-    , k ;
-
-  options = options || {};
-
-  while (i--) {
-    k = keys[i];
-    if (!(k in options)) {
-      options[k] = defaults[k];
-    }
+  if(!options){
+    options = {};
   }
 
-  return options;
-};
+  this._map = map;
+  this.options = _.defaults( options, {
+    parallel: false,
+    limit: false,
+    debug: false,
+    skipError: false
+  } );
+}
 
 /**
  * Set value to destination object
@@ -273,9 +251,25 @@ Mapper.prototype.transfer = function( src, dst, done ){
 
     var srcPath = row[0]
       , dstPath = row[1]
-      , srcValue = {};
+      , srcValue = {}
+      , end = function(){ //err, srcPath, dstPath
+        var args = Array.prototype.slice.call( arguments, 0 );
 
-    mapper._debug(' Transfer from ' + srcPath + ' to ' + ((_.isFunction(dstPath))? 'function': dstPath) + ' is started');
+        mapper._debug(
+          args[0]? 'error': 'info',
+
+          'Transfer from', args[1], 'to', args[2], !args[0]? ' is completed': 'is error'
+        );
+
+
+        if(this.options.skipError){
+          args[0] = null;
+        }
+
+        next.apply(this, args);
+      }.bind(this);
+
+    mapper._debug('Initiated the transfer from ', srcPath);
 
     if(_.isArray(srcPath)) {
       _.each(srcPath, function(path) {
@@ -287,25 +281,29 @@ Mapper.prototype.transfer = function( src, dst, done ){
 
     if( _.isFunction( dstPath ) ) {
       if( dstPath.length == 4 ) {
-        dstPath(srcValue, dst, src, function( err, map ){
-          if(err) return next(err);
-
-          if(map && _.isObject(map))
+        return dstPath(srcValue, dst, src, function( err, map ){
+          if(!err && map && _.isObject(map))
             setValue(map, dst);
 
-          next();
+          var args = [ err ];
+
+          args.push( srcPath );
+          args.push( _.keys(map) );
+
+          return end.apply(this, args);
         });
       }else{
-        setValue( dstPath(srcValue, dst, src), dst );
-        next();
+        var tmp = dstPath(srcValue, dst, src);
+        setValue( tmp, dst );
+        return end(null, srcPath, _.keys(tmp));
       }
     }else{
       var map = {};
       map[dstPath] = srcValue;
       setValue(map, dst);
-      next();
+      return end(null, srcPath, dstPath);
     }
-  }, function(err){
+  }.bind(this), function(err){
     if(err){
       mapper._debug('error', err);
       return done(err);
