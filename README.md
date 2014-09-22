@@ -105,7 +105,9 @@ map = [
 
 # Options
 
-For debug set options true
+## Debug
+
+For debug set options true. Default: false
 
 ```javascript
 
@@ -115,6 +117,25 @@ mapper = new mapper( map, { debug: true } );
 
 mapper.transfer( source, destination, function(err, dst_res_obj){
   // call after 
+});
+
+```
+
+## skipError
+
+For skip error from async callback. Default: false
+
+> if set to false, then the transfer process will stop after the first error
+
+```javascript
+
+var mapper = require('mapper');
+
+mapper = new mapper( map, { skipError: true } );
+
+// not passed errors in an asynchronous callback, and do not stop the transfer process
+mapper.transfer( source, destination, function(err, dst_res_obj){
+  // call after
 });
 
 ```
