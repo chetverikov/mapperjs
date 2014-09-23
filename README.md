@@ -190,3 +190,7 @@ results
 }
 
 ```
+
+# Tests
+
+` npm test `
