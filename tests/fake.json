@@ -1,0 +1,21 @@
+{
+  "field_string": "Foooooo",
+  "field_array_of_string" : [
+    "one",
+    "two"
+  ],
+  "field_array_of_object" : [
+    { "a": "b", "c": "d"},
+    { "e": "f", "g": "g"}
+  ],
+  "field_object": {
+    "a": {
+      "b": "c",
+      "d": [1, 2, 3],
+      "e": {
+        "f": "fooo",
+        "g": "gggg"
+      }
+    }
+  }
+}

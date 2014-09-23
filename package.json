@@ -23,6 +23,10 @@
     "cli-color": "0.x",
     "async": "*"
   },
+  "devDependencies": {
+    "should": "*",
+    "mocha": "*"
+  },
   "main": "index",
   "engines": {
     "node": ">= 0.6.x"
@@ -35,7 +39,7 @@
   },
   "homepage": "https://github.com/chetverikov/mapper",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test node_modules/.bin/mocha --async-only tests/**/*.test.js"
   },
   "license": "MIT"
 }
