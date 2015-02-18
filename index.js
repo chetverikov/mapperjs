@@ -1,6 +1,6 @@
 var _ = require('lodash')
   , mpath = require('mpath')
-  , color = require('cli-color')
+  , debug = require('debug')('mapper')
   , async = require('async')
   , reg_dollar_exist = /\$/
   , isNum = /^\d+$/;
@@ -193,9 +193,11 @@ function Mapper( map, options ){
   this.options = _.defaults( options, {
     parallel: false,
     limit: false,
-    debug: false,
-    skipError: false
-  } );
+    skipError: false,
+    skipFields: ''
+  });
+
+  this._skip = this.options.skipFields.split(' ');
 }
 
 /**
@@ -255,12 +257,7 @@ Mapper.prototype.transfer = function( src, dst, done ){
       , end = function(){ //err, srcPath, dstPath
         var args = Array.prototype.slice.call( arguments, 0 );
 
-        mapper._debug(
-          args[0]? 'error': 'info',
-
-          'Transfer from', args[1], 'to', args[2], !args[0]? ' is completed': 'is error'
-        );
-
+        debug('Transfer from %s to %s %s', args[1], args[2], !args[0]? 'is completed': 'is error' );
 
         if(this.options.skipError){
           args[0] = null;
@@ -269,7 +266,12 @@ Mapper.prototype.transfer = function( src, dst, done ){
         next.apply(this, args);
       }.bind(this);
 
-    mapper._debug('Initiated the transfer from ', srcPath);
+    if(_.indexOf(mapper._skip, srcPath) !== -1){
+      debug('Skip %s', srcPath);
+      return next();
+    }
+
+    debug('Initiated the transfer from %s', srcPath);
 
     if(_.isArray(srcPath)) {
       _.each(srcPath, function(path) {
@@ -305,44 +307,12 @@ Mapper.prototype.transfer = function( src, dst, done ){
     }
   }.bind(this), function(err){
     if(err){
-      mapper._debug('error', err);
+      debug('error %s', err);
       return done(err);
     }
-    mapper._debug('notice', 'Data is transferred.');
+    debug('Data is transferred.');
     done(null, dst);
   });
-};
-
-/**
- * Debug
- *
- * First param may be level.
- * Available levels:
- *  info
- *  error
- *  warn
- *  notice
- *
- * @api private
- */
-Mapper.prototype._debug = function(){
-  var types = {
-      info: color.green,
-      error: color.red.bold,
-      warn: color.yellow,
-      notice: color.blue.bold
-    }
-    , args = Array.prototype.slice.call(arguments, 0);
-
-  if(this.options.debug) {
-    if( types[args[0]] ){
-      args[0] = types[args[0]](args[0]) + ': ';
-    }else{
-      args.unshift(types.info('info: '));
-    }
-
-    console.log.apply(null, args);
-  }
 };
 
 module.exports = Mapper;

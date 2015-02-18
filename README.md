@@ -103,23 +103,17 @@ map = [
 
 ```
 
-# Options
+# Debug
 
-## Debug
-
-For debug set options true. Default: false
+Mapperjs uses the [debug](https://github.com/visionmedia/debug) module internally to log information about route matches and application mode. To see this information, simply set the DEBUG environment variable to substance:* when launching your app and the debug information will appear on the console.
 
 ```javascript
 
-var mapper = require('mapper');
-
-mapper = new mapper( map, { debug: true } );
-
-mapper.transfer( source, destination, function(err, dst_res_obj){
-  // call after 
-});
+DEBUG=mapper* node app.js
 
 ```
+
+# Options
 
 ## skipError
 
@@ -134,6 +128,23 @@ var mapper = require('mapper');
 mapper = new mapper( map, { skipError: true } );
 
 // not passed errors in an asynchronous callback, and do not stop the transfer process
+mapper.transfer( source, destination, function(err, dst_res_obj){
+  // call after
+});
+
+```
+
+## skipFields
+
+For skip not required fields, you can use the option skipFields:
+
+```javascript
+
+var mapper = require('mapper');
+
+mapper = new mapper( map, { skipFields: 'field1 field2 iAnotherField' } );
+
+// without fields field1, field2, iAnotherField
 mapper.transfer( source, destination, function(err, dst_res_obj){
   // call after
 });

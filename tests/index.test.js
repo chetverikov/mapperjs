@@ -97,7 +97,7 @@ describe('MapperJs', function() {
       map.transfer( fake, dst_obj, function(err, dst){
         var result = {
           string: 'Foooooo',
-          foo: '1'
+          foo: 1
         };
 
         dst.should.eql( result );
@@ -208,6 +208,43 @@ describe('MapperJs', function() {
             "one",
             'Foooooo'
           ]
+        };
+
+        dst.should.eql( result );
+        dst_obj.should.eql( result );
+
+        done();
+
+      })
+    });
+  })
+
+  describe('Skip options', function(){
+    it('default', function( done ){
+      var map = new mapper([
+        ['field_string', 'string'],
+        ['field_string', function( val, dst, src, done ){
+          setTimeout(function(){
+            done(null, { 'string_up': val.toUpperCase() })
+          }, 50);
+        }],
+        ['field_array_of_string', function( val, dst, src, done ){
+          setTimeout(function(){
+            var result = [val[0]];
+
+            result.push( dst.string );
+
+            done(null, { array_of_string: result });
+          }, 50);
+        }]
+      ], {skipFields: 'field_array_of_string'});
+
+      var dst_obj = {};
+
+      map.transfer( fake, dst_obj, function(err, dst){
+        var result = {
+          string: 'Foooooo',
+          string_up: 'FOOOOOO'
         };
 
         dst.should.eql( result );
