@@ -17,11 +17,13 @@ NodeJS Data Mapper for transfer data from old format to new.
 
 ```javascript
 
-var mapper = require('mapperjs');
+var Mapper = require('mapperjs');
 
-mapper = new mapper( map, options );
-mapper.transfer( source, destination, function(err, dst_res_obj){
+mapper = new Mapper( map, options );
+mapper.transfer( source, destination ).then(function(dst_res_obj){
   // call after 
+}, function(err){
+  // call after if reject with err
 });
 
 ```
@@ -52,17 +54,17 @@ source = {
 
 destination = {};
 
-map = [
-  ['title', 'title'], 
+map = {
+  title: 'title', 
   /*
    * in destination object will be field description with data from descriptions.long
    */
-  ['descriptions.long', 'description'],
+  'descriptions.long': 'description',
   /*
    * in preview will be first photo from photos
    */
-  ['photos.0', 'preview']
-]
+  'photos.0': 'preview'
+}
 
 ```
 
@@ -72,15 +74,17 @@ On the map are the functions for processing the data sync and async.
 
 ```javascript
 
-map = [
+map = {
 
   /**
    * Async map func
    * value - content entity id
-   * dst, src - destination and source object
-   * done - callback that should be called after the completion of data processing
    */
-  ['entityId', function( value, dst, src, done){
+  entityId: function( value ){
+    var defer = new Deferred();
+    
+    // this.dst - destination
+    // this.src - source
     db.queryById( value, function(err, entity ){
     
       /**
@@ -91,17 +95,21 @@ map = [
        
        * The second argument may contain multiple key/value to setup more fields and values.
        */
-      done(err, { 'entity': entity });
+      defer.resolve({ entity: entity });
+      
+      // defer.reject() for reject
     })
-  }],
+    
+    return defer.promise();
+  },
   
   /**
-   * Sync map func - three args!
+   * Sync map func
    */ 
-  ['comments', function( comments, dst, src ){
-    return { comments_count: getOnlyActive(comments) }
-  }]
-]
+  comments: function( comments ){
+    return { comments_count: getCountOnlyActiveComments(comments) };
+  }
+}
 
 ```
 
@@ -125,12 +133,12 @@ For skip error from async callback. Default: false
 
 ```javascript
 
-var mapper = require('mapper');
+var Mapper = require('mapper');
 
-mapper = new mapper( map, { skipError: true } );
+mapper = new Mapper( map, { skipError: true } );
 
 // not passed errors in an asynchronous callback, and do not stop the transfer process
-mapper.transfer( source, destination, function(err, dst_res_obj){
+mapper.transfer( source, destination ).then(function(dst_res_obj){
   // call after
 });
 
@@ -142,12 +150,12 @@ For skip not required fields, you can use the option skipFields:
 
 ```javascript
 
-var mapper = require('mapper');
+var Mapper = require('mapper');
 
-mapper = new mapper( map, { skipFields: 'field1 field2 iAnotherField' } );
+mapper = new Mapper( map, { skipFields: 'field1 field2 iAnotherField' } );
 
 // without fields field1, field2, iAnotherField
-mapper.transfer( source, destination, function(err, dst_res_obj){
+mapper.transfer( source, destination ).then(function(dst_res_obj){
   // call after
 });
 
@@ -171,21 +179,21 @@ mapper.transfer( source, destination, function(err, dst_res_obj){
         address: ''
      };
  
-  var map = [
-    ['username', function( value ){
-                     var parts = username.split(' ');
+  var map = {
+    username: function( value ){
+      var parts = username.split(' ');
  
-                     return { 'firstname': parts[0], 'lastname': parts[1] };
-                 }],
-    ['avatar', 'avatar'],
-    [['country', 'city'], function( value ){
-                             return {'address': value.country + ', ' + value.city}
-                          }]
-  ];
+      return { firstname: parts[0], lastname: parts[1] };
+    },
+    avatar: 'avatar',
+    'country city', function( value ){
+        return {address: value.country + ', ' + value.city}
+    }
+  };
  
   var mapper = new Mapper( map );
  
-  mapper.transfer( oldObj, newObj, function( err, obj ){
+  mapper.transfer( oldObj, newObj ).then(function( obj ){
       console.log( obj );
   });
 

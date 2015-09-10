@@ -1,12 +1,12 @@
 var _ = require('lodash')
   , mpath = require('mpath')
   , debug = require('debug')('mapper')
-  , async = require('async')
+  , vow = require('vow')
   , reg_dollar_exist = /\$/
   , isNum = /^\d+$/;
 
 // wait https://github.com/aheckmann/mpath/pull/6
-function K ( v ){ return v; };
+function K ( v ){ return v; }
 mpath.set = function (path, val, o, special, map, _copying, workWithArray) {
   var lookup;
 
@@ -157,15 +157,15 @@ mpath.set = function (path, val, o, special, map, _copying, workWithArray) {
  *    };
  *
  * var map = [
- *   ['username', function( value ){
- *                    var parts = username.split(' ');
+ *   username: function( value ){
+ *      var parts = username.split(' ');
  *
- *                    return {'firstname': parts[0], 'lastname': parts[1]};
- *                }],
- *   ['avatar', 'avatar'],
- *   [['country', 'city'], function( value ){
- *                            return {'address': value.country + ', ' + value.city}
- *                         }]
+ *      return {firstname: parts[0], lastname: parts[1]};
+ *   },
+ *   avatar: 'avatar',
+ *   'country city': function( value ){
+ *     return {'address': value.country + ', ' + value.city}
+ *   }
  * ];
  *
  * var mapper = new Mapper( map );
@@ -182,22 +182,24 @@ mpath.set = function (path, val, o, special, map, _copying, workWithArray) {
  * @constructor
  */
 function Mapper( map, options ){
-  if(!_.isArray(map) || !map.length)
-    throw new Error( "Map is not array" );
+  if(!_.isObject(map))
+    throw new TypeError( "Map is not object" );
 
   if(!options){
     options = {};
   }
 
   this._map = map;
-  this.options = _.defaults( options, {
-    parallel: false,
-    limit: false,
-    skipError: false,
-    skipFields: ''
-  });
+  this._keys = _.keys(this._map) || [];
 
-  this._skip = this.options.skipFields.split(' ');
+  if(!this._keys)
+    throw new TypeError( "Map is empty" );
+
+  this.options = _.defaults( options, {
+    skipError: false,
+    skipFields: '',
+    delimiter: ' '
+  });
 }
 
 /**
@@ -206,13 +208,13 @@ function Mapper( map, options ){
  * @param map
  * @param dstObj
  */
-function setValue(map, dstObj){
+Mapper.prototype.setValue = function(map, dstObj){
   if(map !== undefined)
     _.each( map, function( what, where ){
       if( what !== undefined )
         mpath.set( where, what, dstObj );
     });
-}
+};
 
 /**
  * Get value from source object
@@ -221,12 +223,84 @@ function setValue(map, dstObj){
  * @param obj
  * @returns {*}
  */
-function getValue( path, obj ){
+Mapper.prototype.getValue = function(path, obj){
   if(path)
     return mpath.get(path, obj);
 
   return undefined;
-}
+};
+
+Mapper.prototype._extractor = function(){
+  var paths = this.source_path.split(this.mapper.options.delimiter)
+    , value
+    , i = 0
+    , len = paths.length
+    , key;
+
+  debug('Initiated the transfer from %s', paths);
+
+  if(len > 1) {
+    value = {};
+
+    while(i < len) {
+      key = paths[i++];
+      value[key] = this.mapper.getValue(key, this.src);
+    }
+  }else{
+    value = this.mapper.getValue(this.source_path, this.src);
+  }
+
+  return value;
+};
+
+Mapper.prototype._bridge = function(value){
+  var obj = {};
+  obj[this.handler] = value;
+  return obj;
+};
+
+Mapper.prototype._injector = function( map ){
+  if(map && _.isObject(map))
+    this.mapper.setValue(map, this.dst);
+};
+
+Mapper.prototype._executor = function( value ){
+  if(value != null){
+    var func = (_.isFunction(this.handler))? this.handler: this.mapper._bridge;
+    var defer = vow.defer();
+
+    vow
+      .resolve(value)
+      .then(func, this)
+      .then(defer.resolve.bind(defer), function(reason){
+        this.mapper.options.skipError? defer.resolve() : defer.reject(reason);
+      }, this);
+
+    return defer.promise().then(this.mapper._injector, this);
+  }
+};
+
+Mapper.prototype._reduceHandler = function(promise, handler, source_path){
+  var context
+    , src = this.src
+    , dst = this.dst
+    , mapper = this.mapper
+    , skipFields = mapper.options.skipFields
+    , delimiter  = mapper.options.delimiter
+    , paths = source_path.split(delimiter);
+
+  paths = paths.filter(function(path){
+    return skipFields.indexOf(path) === -1;
+  });
+
+  if(!paths.length){
+    return promise;
+  }
+
+  context = {mapper: mapper, src: src, dst: dst, source_path: paths.join(delimiter), handler: handler};
+
+  return promise.then(mapper._extractor, context).then(mapper._executor, context);
+};
 
 /**
  * The transfer of data
@@ -236,83 +310,19 @@ function getValue( path, obj ){
  *
  * @param src
  * @param dst
- * @param done
  * @returns {*}
  */
-Mapper.prototype.transfer = function( src, dst, done ){
+Mapper.prototype.transfer = function( src, dst ){
+  var promise;
+
   if(!_.isObject(src) || !_.isObject(dst))
-    return done(new Error("Source or destination object is not object"));
+    return vow.reject(new TypeError("Source or destination object is not object"));
 
-  // TODO: eachLimit!
-  var mapper = this
-    , mode = (mapper.parallel)? ((!mapper.limit || mapper.limit < 2)? 'eachSeries': 'eachLimit'): 'each';
+  promise = _.reduce(this._map, this._reduceHandler, vow.resolve(), {mapper: this, dst: dst, src: src});
 
-  async[mode](mapper._map, function( row, next ){
-    if(!_.isArray(row) || row.length < 2)
-      return next(new Error("One of the elements of the map is not binary"));
-
-    var srcPath = row[0]
-      , dstPath = row[1]
-      , srcValue = {}
-      , end = function(){ //err, srcPath, dstPath
-        var args = Array.prototype.slice.call( arguments, 0 );
-
-        debug('Transfer from %s to %s %s', args[1], args[2], !args[0]? 'is completed': 'is error' );
-
-        if(this.options.skipError){
-          args[0] = null;
-        }
-
-        next.apply(this, args);
-      }.bind(this);
-
-    if(_.indexOf(mapper._skip, srcPath) !== -1){
-      debug('Skip %s', srcPath);
-      return next();
-    }
-
-    debug('Initiated the transfer from %s', srcPath);
-
-    if(_.isArray(srcPath)) {
-      _.each(srcPath, function(path) {
-        srcValue[path] = getValue(path, src);
-      });
-    }else{
-      srcValue = getValue(srcPath, src);
-    }
-
-    if( _.isFunction( dstPath ) ) {
-      if( dstPath.length == 4 ) {
-        return dstPath(srcValue, dst, src, function( err, map ){
-          if(!err && map && _.isObject(map))
-            setValue(map, dst);
-
-          var args = [ err ];
-
-          args.push( srcPath );
-          args.push( _.keys(map) );
-
-          return end.apply(this, args);
-        });
-      }else{
-        var tmp = dstPath(srcValue, dst, src);
-        setValue( tmp, dst );
-        return end(null, srcPath, _.keys(tmp));
-      }
-    }else{
-      var map = {};
-      map[dstPath] = srcValue;
-      setValue(map, dst);
-      return end(null, srcPath, dstPath);
-    }
-  }.bind(this), function(err){
-    if(err){
-      debug('error %s', err);
-      return done(err);
-    }
-    debug('Data is transferred.');
-    done(null, dst);
-  });
+  return promise.then(function(){
+    return this.dst;
+  }, {dst: dst});
 };
 
 module.exports = Mapper;
