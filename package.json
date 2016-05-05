@@ -1,6 +1,6 @@
 {
   "name": "mapperjs",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "The solution for node.js for migrate data from the old format to the new format data with pre-processing",
   "keywords": [
     "data",
@@ -18,11 +18,11 @@
     "url": "https://github.com/chetverikov/mapper.git"
   },
   "dependencies": {
-    "async": "*",
     "debug": "~2.1.1",
-    "lodash": "~3.0.0",
-    "mpath": "~0.2.0",
-    "vow": "^0.4.10"
+    "lodash.defaults": "^4.0.1",
+    "lodash.isfunction": "^3.0.8",
+    "lodash.isobject": "^3.0.2",
+    "mpath": "~0.2.0"
   },
   "devDependencies": {
     "should": "*",
@@ -30,7 +30,7 @@
   },
   "main": "index",
   "engines": {
-    "node": ">= 0.6.x"
+    "node": ">= 4.x"
   },
   "files": [
     "index.js"

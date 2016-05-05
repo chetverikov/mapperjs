@@ -1,130 +1,133 @@
+'use strict';
+
 /**
  * @fileOverview Description file.
  * @author <a href="mailto:ma.chetverikov@gmail.com">Maksim Chetverikov</a>
  */
 
-var Mapper = require('./../')
-  , fake = require('./fake.json')
-  , vow = require('vow');
+const Mapper = require('../');
+const fake = require('./fake.json');
 
 require('should');
 
-describe('MapperJs', function() {
-  it('default', function(){
-    var mapper, dst_obj = {};
+describe('MapperJs', () => {
 
-    mapper = new Mapper({
-      field_string: function( val ){
-        return { 'string': val, string_up: val.toUpperCase() };
+  it('default', () => {
+    const dst_obj = {};
+
+    const mapper = new Mapper({
+      field_string: val => {
+        return {string: val, string_up: val.toUpperCase()};
       },
-      field_array_of_string: function( val ){
+
+      /* eslint object-shorthand: 0 */
+      field_array_of_string: function(val) {
         var result = [val[0]];
 
-        result.push( this.dst.string );
+        result.push(this.dst.string);
 
-        return { array_of_string: result };
+        return {array_of_string: result};
       }
     });
 
-    return mapper.transfer(fake, dst_obj).then(function( dst ){
-      var result = {
+    return mapper.transfer(fake, dst_obj).then(dst => {
+      const result = {
         string: 'Foooooo',
         string_up: 'FOOOOOO',
-        array_of_string: [
-          "one",
-          'Foooooo'
-        ]
+        array_of_string: ['one', 'Foooooo']
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
     });
   });
-  it('undefined field in src', function( ){
-    var map = new Mapper({
+
+  it('undefined field in src', () => {
+    const map = new Mapper({
       field_string: 'string',
       field_not_exist: 'foo'
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
-      var result = {
+    return map.transfer(fake, dst_obj).then(dst => {
+      const result = {
         string: 'Foooooo'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
-  it('undefined field in src with handler', function( ){
-    var map = new Mapper({
+
+  it('undefined field in src with handler', () => {
+    const map = new Mapper({
       field_string: 'string',
-      field_not_exist: function(){
-        return {'foo': 'bar'};
+      field_not_exist: () => {
+        return {foo: 'bar'};
       }
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
-      var result = {
+    return map.transfer(fake, dst_obj).then(dst => {
+      const result = {
         string: 'Foooooo'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('get deep field', function( ){
-    var map = new Mapper({
+  it('get deep field', () => {
+    const map = new Mapper({
       field_string: 'string',
       'field_object.a.e.f': 'foo'
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
-      var result = {
+    return map.transfer(fake, dst_obj).then(dst => {
+      const result = {
         string: 'Foooooo',
         foo: 'fooo'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('get array elem deep field ', function(){
-    var map = new Mapper({
+  it('get array elem deep field ', () => {
+    const map = new Mapper({
       field_string: 'string',
       'field_object.a.d.0': 'foo'
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
-      var result = {
+    return map.transfer(fake, dst_obj).then(dst => {
+      const result = {
         string: 'Foooooo',
         foo: 1
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('create deep field in dst', function(){
-    var map = new Mapper({
+  it('create deep field in dst', () => {
+    const map = new Mapper({
       field_array_of_object: 'i.deep.deep.field'
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
-        i:{
+        i: {
           deep: {
             deep: {
               field: fake.field_array_of_object
@@ -133,158 +136,156 @@ describe('MapperJs', function() {
         }
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('create deep field array in dst', function(){
-    var map = new Mapper({
-        'field_array_of_object.0': 'i.deep.array.$', //create
-        'field_array_of_object.1': 'i.deep.array.$'  //add
+  it('create deep field array in dst', () => {
+    const map = new Mapper({
+      'field_array_of_object.0': 'i.deep.array.$', // create
+      'field_array_of_object.1': 'i.deep.array.$'  // add
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
-        i:{
+        i: {
           deep: {
             array: fake.field_array_of_object
           }
         }
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('multi field', function(){
-    var map = new Mapper({
-      'field_object.a.e.f field_string': function( values ){
-        return { multi: [values['field_object.a.e.f'], values['field_string']].join(' ') }
+  it('multi field', () => {
+    const map = new Mapper({
+      'field_object.a.e.f field_string': values => {
+        return {multi: [values['field_object.a.e.f'], values.field_string].join(' ')};
       }
     });
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
         multi: [fake.field_object.a.e.f, fake.field_string].join(' ')
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('Skip options', function(){
-    var map = new Mapper({
+  it('Skip options', () => {
+    const map = new Mapper({
       field_string: 'string',
-      field_array_of_string: function( val ){
-          var result = [val[0]];
+      field_array_of_string: function(val) {
+        var result = [val[0]];
 
-          result.push( this.dst.string );
+        result.push(this.dst.string);
 
-          return { array_of_string: result };
+        return {array_of_string: result};
       }
     }, {skipFields: 'field_array_of_string'});
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
+      const result = {
+        string: 'Foooooo'
+      };
+
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
+  });
+
+  it('handler return promise', () => {
+    const map = new Mapper({
+      field_string: value => {
+        var defer = Promise.defer();
+
+        setTimeout(() => defer.resolve({string: value}), 50);
+
+        return defer.promise;
+      }
+    }, {skipFields: 'field_array_of_string'});
+
+    const dst_obj = {};
+
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
         string: 'Foooooo'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('handler return promise', function(){
-    var map = new Mapper({
-      field_string: function(value){
-        var defer = vow.defer();
+  it('handler return rejected promise', () => {
+    const map = new Mapper({
+      field_string: value => {
+        const defer = Promise.defer();
 
-        setTimeout(defer.resolve.bind(defer, {string: value}), 50);
+        setTimeout(() => defer.reject('Not set value'), 50);
 
-        return defer.promise();
+        return defer.promise;
       }
     }, {skipFields: 'field_array_of_string'});
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
-      var result = {
-        string: 'Foooooo'
-      };
-
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+    return map.transfer(fake, dst_obj).catch(err => err.should.eql('Not set value'));
   });
 
-  it('handler return rejected promise', function(){
-    var map = new Mapper({
-      field_string: function(value){
-        var defer = vow.defer();
+  it('handler return rejected promise with skipError option', () => {
+    const map = new Mapper({
+      field_string: value => {
+        var defer = Promise.defer();
 
-        setTimeout(defer.reject.bind(defer, 'Not set value'), 50);
+        setTimeout(() => defer.reject('Not set value'), 50);
 
-        return defer.promise();
-      }
-    }, {skipFields: 'field_array_of_string'});
-
-    var dst_obj = {};
-
-    return map.transfer( fake, dst_obj ).fail(function(err){
-      err.should.eql('Not set value');
-    })
-  });
-
-  it('handler return rejected promise with skipError option', function(){
-    var map = new Mapper({
-      field_string: function(value){
-        var defer = vow.defer();
-
-        setTimeout(defer.reject.bind(defer, 'Not set value'), 50);
-
-        return defer.promise();
+        return defer.promise;
       },
       'field_object.a.b': 'string'
     }, {skipError: true});
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
         string: 'c'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 
-  it('handler with exception', function(){
-    var map = new Mapper({
-      field_string: function(){
-        throw new Error('Ho ho ho')
+  it('handler with exception', () => {
+    const map = new Mapper({
+      field_string: () => {
+        throw new Error('Ho ho ho');
       },
       'field_object.a.b': 'string'
     }, {skipError: true});
 
-    var dst_obj = {};
+    const dst_obj = {};
 
-    return map.transfer( fake, dst_obj ).then(function(dst){
+    return map.transfer(fake, dst_obj).then(dst => {
       var result = {
         string: 'c'
       };
 
-      dst.should.eql( result );
-      dst_obj.should.eql( result );
-    })
+      dst.should.eql(result);
+      dst_obj.should.eql(result);
+    });
   });
 });

@@ -17,14 +17,16 @@ NodeJS Data Mapper for transfer data from old format to new.
 
 ```javascript
 
-var Mapper = require('mapperjs');
+const Mapper = require('mapperjs');
 
 mapper = new Mapper( map, options );
-mapper.transfer( source, destination ).then(function(dst_res_obj){
-  // call after 
-}, function(err){
-  // call after if reject with err
-});
+mapper.transfer( source, destination )
+ .then(dst_res_obj => {
+   // call after
+ }
+ .catch(err => {
+   // call after if reject with err
+ });
 
 ```
 
@@ -55,7 +57,7 @@ source = {
 destination = {};
 
 map = {
-  title: 'title', 
+  title: 'title',
   /*
    * in destination object will be field description with data from descriptions.long
    */
@@ -81,32 +83,33 @@ map = {
    * value - content entity id
    */
   entityId: function( value ){
-    var defer = new Deferred();
-    
+    const defer = Promise.defer();
+
     // this.dst - destination
     // this.src - source
-    db.queryById( value, function(err, entity ){
-    
+
+    db.queryById( value )
+     .then( entity ){
+
       /**
        * first arg - error
-       * second arg - object: 
+       * second arg - object:
        *   key - path to destination object
        *   value - value
-       
+
        * The second argument may contain multiple key/value to setup more fields and values.
        */
       defer.resolve({ entity: entity });
-      
-      // defer.reject() for reject
-    })
-    
-    return defer.promise();
+     })
+     .catch(err => defer.reject(err));
+
+    return defer.promise;
   },
-  
+
   /**
    * Sync map func
-   */ 
-  comments: function( comments ){
+   */
+  comments: comments => {
     return { comments_count: getCountOnlyActiveComments(comments) };
   }
 }
@@ -133,12 +136,12 @@ For skip error from async callback. Default: false
 
 ```javascript
 
-var Mapper = require('mapper');
+const Mapper = require('mapper');
 
 mapper = new Mapper( map, { skipError: true } );
 
 // not passed errors in an asynchronous callback, and do not stop the transfer process
-mapper.transfer( source, destination ).then(function(dst_res_obj){
+mapper.transfer( source, destination ).then(dst_res_obj => {
   // call after
 });
 
@@ -150,12 +153,12 @@ For skip not required fields, you can use the option skipFields:
 
 ```javascript
 
-var Mapper = require('mapper');
+const Mapper = require('mapper');
 
 mapper = new Mapper( map, { skipFields: 'field1 field2 iAnotherField' } );
 
 // without fields field1, field2, iAnotherField
-mapper.transfer( source, destination ).then(function(dst_res_obj){
+mapper.transfer( source, destination ).then(dst_res_obj => {
   // call after
 });
 
@@ -166,7 +169,7 @@ mapper.transfer( source, destination ).then(function(dst_res_obj){
 
 ```javascript
 
-  var oldObj = {
+  const oldObj = {
         username: 'Maksim Chetverikov',
         avatar: '2fge0923df08r.jpg',
         country: 'Russia'
@@ -178,24 +181,22 @@ mapper.transfer( source, destination ).then(function(dst_res_obj){
         avatar: '',
         address: ''
      };
- 
-  var map = {
-    username: function( value ){
-      var parts = username.split(' ');
- 
+
+  const map = {
+    username: username => {
+      const parts = username.split(' ');
+
       return { firstname: parts[0], lastname: parts[1] };
     },
     avatar: 'avatar',
-    'country city', function( value ){
+    'country city', values => {
         return {address: value.country + ', ' + value.city}
     }
   };
- 
-  var mapper = new Mapper( map );
- 
-  mapper.transfer( oldObj, newObj ).then(function( obj ){
-      console.log( obj );
-  });
+
+  const mapper = new Mapper( map );
+
+  mapper.transfer( oldObj, newObj ).then(obj => console.log( obj ));
 
 ```
 
