@@ -19,9 +19,6 @@
   },
   "dependencies": {
     "debug": "^3.0.1",
-    "lodash.defaults": "^4.2.0",
-    "lodash.isfunction": "^3.0.8",
-    "lodash.isobject": "^3.0.2",
     "mpath": "^0.3.0"
   },
   "devDependencies": {
