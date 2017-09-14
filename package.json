@@ -18,11 +18,8 @@
     "url": "https://github.com/chetverikov/mapper.git"
   },
   "dependencies": {
-    "debug": "~2.1.1",
-    "lodash.defaults": "^4.0.1",
-    "lodash.isfunction": "^3.0.8",
-    "lodash.isobject": "^3.0.2",
-    "mpath": "~0.2.0"
+    "debug": "^3.0.1",
+    "mpath": "^0.3.0"
   },
   "devDependencies": {
     "should": "*",
