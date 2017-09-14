@@ -22,7 +22,7 @@ describe('MapperJs', () => {
 
       /* eslint object-shorthand: 0 */
       field_array_of_string: function(val) {
-        var result = [val[0]];
+        const result = [val[0]];
 
         result.push(this.dst.string);
 
@@ -126,7 +126,7 @@ describe('MapperJs', () => {
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         i: {
           deep: {
             deep: {
@@ -150,7 +150,7 @@ describe('MapperJs', () => {
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         i: {
           deep: {
             array: fake.field_array_of_object
@@ -173,7 +173,7 @@ describe('MapperJs', () => {
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         multi: [fake.field_object.a.e.f, fake.field_string].join(' ')
       };
 
@@ -186,7 +186,7 @@ describe('MapperJs', () => {
     const map = new Mapper({
       field_string: 'string',
       field_array_of_string: function(val) {
-        var result = [val[0]];
+        const result = [val[0]];
 
         result.push(this.dst.string);
 
@@ -272,7 +272,7 @@ describe('MapperJs', () => {
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         string: 'c'
       };
 

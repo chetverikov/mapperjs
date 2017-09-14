@@ -148,22 +148,22 @@ mpath.set = function(path, val, o, special, map, _copying, workWithArray) {
  *
  * #### Example
  *
- * var oldObj = {
+ * const oldObj = {
  *       username: 'Maksim Chetverikov',
  *       avatar: '2fge0923df08r.jpg',
  *       country: 'Russia'
  *       city: 'Irkutsk'
  *     }
- *   , newObj = {
+ * const newObj = {
  *       firstname: '',
  *       lastname: '',
  *       avatar: '',
  *       address: ''
  *    };
  *
- * var map = [
+ * const map = [
  *   username: function( value ){
- *      var parts = username.split(' ');
+ *      const parts = username.split(' ');
  *
  *      return {firstname: parts[0], lastname: parts[1]};
  *   },
@@ -173,7 +173,7 @@ mpath.set = function(path, val, o, special, map, _copying, workWithArray) {
  *   }
  * ];
  *
- * var mapper = new Mapper( map );
+ * const mapper = new Mapper( map );
  *
  * mapper.transfer( oldObj, newObj, function( err, obj ){
  *     console.log( obj );
@@ -275,8 +275,10 @@ class Mapper {
    * @returns {Object}
    */
   bridge(value) {
-    var obj = {};
+    const obj = {};
+
     obj[this.handler] = value;
+
     return obj;
   }
 
