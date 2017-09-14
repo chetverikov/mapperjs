@@ -1,6 +1,7 @@
 mapper
 ======
 
+[![Travis CI](https://travis-ci.org/chetverikov/mapperjs.svg?branch=master)](https://travis-ci.org/chetverikov/mapperjs)
 [![Join the chat at https://gitter.im/chetverikov/mapperjs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/chetverikov/mapperjs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 NodeJS Data Mapper for transfer data from old format to new.
