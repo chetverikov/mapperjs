@@ -301,17 +301,14 @@ class Mapper {
 
     if (value != null) {
       const func = (isFunction(handler)) ? handler : this.bridge;
-      const defer = Promise.defer();
 
-      Promise
-        .resolve(value)
-        .then(value => func.call(context, value))
-        .then(result => defer.resolve(result))
-        .catch(reason => this.options.skipError ? defer.resolve() : defer.reject(reason));
-
-      return defer
-        .promise
-        .then(result => this.injector(result));
+      return new Promise(resolve => resolve(func.call(context, value)))
+        .then(result => this.injector(result))
+        .catch(reason => {
+          if (!this.options.skipError) {
+            throw reason;
+          }
+        });
     }
   }
 

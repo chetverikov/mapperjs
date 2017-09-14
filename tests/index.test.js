@@ -208,19 +208,16 @@ describe('MapperJs', () => {
 
   it('handler return promise', () => {
     const map = new Mapper({
-      field_string: value => {
-        var defer = Promise.defer();
-
-        setTimeout(() => defer.resolve({string: value}), 50);
-
-        return defer.promise;
-      }
+      field_string: value =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({string: value}), 50)
+        )
     }, {skipFields: 'field_array_of_string'});
 
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         string: 'Foooooo'
       };
 
@@ -231,13 +228,10 @@ describe('MapperJs', () => {
 
   it('handler return rejected promise', () => {
     const map = new Mapper({
-      field_string: value => {
-        const defer = Promise.defer();
-
-        setTimeout(() => defer.reject('Not set value'), 50);
-
-        return defer.promise;
-      }
+      field_string: value =>
+        new Promise((resolve, reject) =>
+          setTimeout(() => reject('Not set value'), 50)
+        )
     }, {skipFields: 'field_array_of_string'});
 
     const dst_obj = {};
@@ -247,20 +241,18 @@ describe('MapperJs', () => {
 
   it('handler return rejected promise with skipError option', () => {
     const map = new Mapper({
-      field_string: value => {
-        var defer = Promise.defer();
-
-        setTimeout(() => defer.reject('Not set value'), 50);
-
-        return defer.promise;
-      },
+      field_string: value =>
+        new Promise((resolve, reject) =>
+          setTimeout(() => reject('Not set value'), 50)
+        )
+      ,
       'field_object.a.b': 'string'
     }, {skipError: true});
 
     const dst_obj = {};
 
     return map.transfer(fake, dst_obj).then(dst => {
-      var result = {
+      const result = {
         string: 'c'
       };
 

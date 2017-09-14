@@ -83,12 +83,10 @@ map = {
    * value - content entity id
    */
   entityId: function( value ){
-    const defer = Promise.defer();
-
     // this.dst - destination
     // this.src - source
 
-    db.queryById( value )
+    retun db.queryById( value )
      .then( entity ){
 
       /**
@@ -99,11 +97,9 @@ map = {
 
        * The second argument may contain multiple key/value to setup more fields and values.
        */
-      defer.resolve({ entity: entity });
+      return { entity: entity };
      })
      .catch(err => defer.reject(err));
-
-    return defer.promise;
   },
 
   /**
