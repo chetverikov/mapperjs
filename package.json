@@ -1,6 +1,6 @@
 {
   "name": "mapperjs",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "The solution for node.js for migrate data from the old format to the new format data with pre-processing",
   "keywords": [
     "data",
@@ -29,9 +29,6 @@
   "engines": {
     "node": ">= 4.x"
   },
-  "files": [
-    "index.js"
-  ],
   "bugs": {
     "url": "https://github.com/chetverikov/mapper/issues"
   },
